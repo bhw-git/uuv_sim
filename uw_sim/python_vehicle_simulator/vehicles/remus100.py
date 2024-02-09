@@ -21,7 +21,7 @@ remus100.py:
 
 Methods:
         
-    [nu,u_actual] = dynamics(eta,nu,u_actual,u_control,sampleTime ) returns 
+    [nu,u_actual] = dynamics(eta,nu,u_actual,u_control,sampleTime) returns 
         nu[k+1] and u_actual[k+1] using Euler's method. The control input is:
 
             u_control = [ delta_r   rudder angle (rad)
@@ -45,7 +45,9 @@ References:
 
 Author:     Thor I. Fossen
 """
+import os
 import numpy as np
+import csv
 import math
 import sys
 from python_vehicle_simulator.lib.control import PIDpolePlacement
@@ -67,6 +69,9 @@ class remus100:
         V_c:    current speed (m/s)
         beta_c: current direction (deg)
     """
+    #reset the output.csv file
+    with open("C:\\Users\\bhuva\\Documents\\controlsys\\output.csv","w") as file:
+        pass
 
     def __init__(
         self,
@@ -487,10 +492,18 @@ class remus100:
                 
         # Euler's integration method (k+1)
         self.e_psi_int += sampleTime * ssa( psi - self.psi_d );
-        
-        
+
         u_control = np.array([ delta_r, delta_s, n], float)
 
+        # Append data to the output.csv file
+        # try block is used to check the output data is writable to the Output file
+        # if not available then it will raise an exception
+        try:
+            with open("C:\\Users\\bhuva\\Documents\\controlsys\\output.csv","a",newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(u_control)
+        except IOError:
+            print ("Cannot write the data into the file'output.csv'")
         return u_control
 
     
