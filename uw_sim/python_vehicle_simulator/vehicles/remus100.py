@@ -17,7 +17,9 @@ remus100.py:
         psi_d:  desired yaw angle (deg)
         n_d:    desired propeller revolution (rpm)
         V_c:    current speed (m/s)
-        beta_c: current direction (deg)                  
+        beta_c: current direction (deg)
+        1 knots = 1.852 km/hr
+        1 knots = 0.514444 m/s
 
 Methods:
         
@@ -45,7 +47,6 @@ References:
 
 Author:     Thor I. Fossen
 """
-import os
 import numpy as np
 import csv
 import math
@@ -69,9 +70,6 @@ class remus100:
         V_c:    current speed (m/s)
         beta_c: current direction (deg)
     """
-    #reset the output.csv file
-    with open("C:\\Users\\bhuva\\Documents\\controlsys\\output.csv","w") as file:
-        pass
 
     def __init__(
         self,
@@ -136,7 +134,7 @@ class remus100:
         if r_rpm < 0.0 or r_rpm > self.nMax:
             sys.exit("The RPM value should be in the interval 0-%s", (self.nMax))
         
-        if r_z > 100.0 or r_z < 0.0:
+        if r_z > 1000.0 or r_z < 0.0:
             sys.exit('desired depth must be between 0-100 m')    
         
         # Hydrodynamics (Fossen 2021, Section 8.4.2)    
@@ -495,15 +493,12 @@ class remus100:
 
         u_control = np.array([ delta_r, delta_s, n], float)
 
-        # Append data to the output.csv file
-        # try block is used to check the output data is writable to the Output file
-        # if not available then it will raise an exception
-        try:
-            with open("C:\\Users\\bhuva\\Documents\\controlsys\\output.csv","a",newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow(u_control)
-        except IOError:
-            print ("Cannot write the data into the file'output.csv'")
-        return u_control
+        # try:
+        #     with open("C:\\Users\\bhuva\\Documents\\controlsys\\Launchtrax_sim\\uw_sim\\trial.csv",'a',newline='') as file:
+        #         writer = csv.writer(file)
+        #         writer.writerow(u_control)
+                
+        # except IOError:
+        #     print ("Cannot write the data into the file'output.csv'")
 
-    
+        return u_control

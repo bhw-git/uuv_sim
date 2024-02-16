@@ -47,7 +47,10 @@ def simulate(N, sampleTime, vehicle):
     t = 0                       # initial simulation time
 
     # Initial state vectors
-    eta = np.array([0, 0, 0, 0, 0, 0], float)    # position/attitude, user editable
+    # eta = np.array([0, 0, 0, 0, 0, 0], float)    # position/attitude, user editable
+    
+    eta = vehicle.eta                            # code added by me in this file
+
     nu = vehicle.nu                              # velocity, defined by vehicle class
     u_actual = vehicle.u_actual                  # actual inputs, defined by vehicle class
     
