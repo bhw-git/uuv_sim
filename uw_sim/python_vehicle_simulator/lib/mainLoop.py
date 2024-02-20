@@ -41,16 +41,13 @@ def printVehicleinfo(vehicle, sampleTime, N):
 ###############################################################################
 # Function simulate(N, sampleTime, vehicle)
 ###############################################################################
-def simulate(N, sampleTime, vehicle):
+def simulate(N, sampleTime, vehicle, t_offset=0, initial_state = np.array([0, 0, 0, 0, 0, 0], float)):
     
     DOF = 6                     # degrees of freedom
     t = 0                       # initial simulation time
 
     # Initial state vectors
-    # eta = np.array([0, 0, 0, 0, 0, 0], float)    # position/attitude, user editable
-    
-    eta = vehicle.eta                            # code added by me in this file
-
+    eta = initial_state  # position/attitude, user editable
     nu = vehicle.nu                              # velocity, defined by vehicle class
     u_actual = vehicle.u_actual                  # actual inputs, defined by vehicle class
     
