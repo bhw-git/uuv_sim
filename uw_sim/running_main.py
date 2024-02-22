@@ -14,15 +14,14 @@ import os
 import csv
 import sys
 import time
-import math
 import pandas as pd
 import matplotlib.pyplot as plt
 from python_vehicle_simulator.vehicles import *
 from python_vehicle_simulator.lib import *
 
 # Simulation parameters: 
-sampleTime = 0.1                 # sample time [seconds]
-N = 6000                  # number of samples
+sampleTime = 0.02                   # sample time [seconds]
+N = 10000                    # number of samples
 
 # 3D plot and animation parameters where bindexser = {firefox,chrome,safari,etc.}
 numDataPoints = 50                  # number of 3D data points
@@ -36,8 +35,8 @@ printSimInfo()
 """
 Call constructors without arguments to test step inputs, e.g. DSRV(), otter(), etc. 
 """
-time_profile = pd.read_csv('Last_Profile.csv')
-vehicle = remus100('depthHeadingAutopilot',time_profile.iloc[0,0],time_profile.iloc[0,1],time_profile.iloc[0,2],time_profile.iloc[0,3],time_profile.iloc[0,4])
+path_profile = pd.read_csv('New_Profile.csv')
+vehicle = remus100('depthHeadingAutopilot',path_profile.iloc[0,0],path_profile.iloc[0,1],path_profile.iloc[0,2],path_profile.iloc[0,3],path_profile.iloc[0,4])   
 printVehicleinfo(vehicle, sampleTime, N) 
 [simTime, simData] = simulate(N, sampleTime, vehicle)
 
@@ -46,28 +45,30 @@ printVehicleinfo(vehicle, sampleTime, N)
 
 def leg(depth,yaw,legTime):
     N_samples = legTime / sampleTime
-    N_samples = round(N_samples)
+    N_samples = int(N_samples)
     global simData,simTime
     vehicle.ref_z = depth
     vehicle.ref_psi = yaw
     initial_state =np.array([simData[-1,0],simData[-1,1],simData[-1,2],simData[-1,3],simData[-1,4],simData[-1,5]])
     vehicle.nu = np.array([simData[-1,6],simData[-1,7],simData[-1,8],simData[-1,9],simData[-1,10],simData[-1,11]])
     vehicle.u_actual = np.array([simData[-1,15],simData[-1,16],simData[-1,17]])
-    print("Toffset", simTime[0, -1])
-    [simTime1, simData1] = simulate(N_samples, sampleTime, vehicle, simTime[0, -1], initial_state)
+    [simTime1, simData1] = simulate(N_samples, sampleTime, vehicle, simTime[-1], initial_state)
     simData =np.vstack((simData, simData1))
     simTime = np.vstack((simTime , simTime1))
-    # print(simData[:,1].shape,simData[:,2].shape)
-    # print(simTime.shape,simData[:,2].shape)
+    # print(simData[:,0].shape,simData[:,1].shape,simData[:,2].shape,simData[:,3].shape,simData[:,4].shape,simData[:,5].shape,simData[:,6].shape,simData[:,7].shape,simData[:,8].shape,simData[:,9].shape,simData[:,10].shape,simData[:,11].shape,simData[:,12].shape,simData[:,13].shape,simData[:,14].shape,simData[:,15].shape,simData[:,16].shape,simData[:,17].shape)
+    # xyz = simTime.reshape(-1)
+    # simTime = xyz
+    # print(simTime.shape)
+
 ###############################################################################
 # Main simulation loop 
 ###############################################################################
 def main():
-    time_profile = pd.read_csv('Last_Profile.csv')
+    time_profile = pd.read_csv('New_Profile.csv')
+
     for i in range(len(time_profile)):
-        print(time_profile.iloc[i,8], simData.shape, simTime.shape)
-        leg(time_profile.iloc[i,0],time_profile.iloc[i,1],time_profile.iloc[i,8])
-        
+        # print(time_profile.iloc[i,8])
+        leg(time_profile.iloc[i,0],time_profile.iloc[i,1],200)
     # final_data = np.hstack((simTime,simData))
     # df = pd.DataFrame(final_data)
     # df.columns = ['Time(sec)', 'Position(x(m))', 'Position(y(m))', 'Position(z(m))', 'Roll(deg)', 'Pitch(deg)', 'Yaw(deg)', 'Surge_Velocity(m/s)', 'Sway_Velocity(m/s)', 'Heave_Velocity(m/s)', 'Roll_Rate(m/s)', 'Pitch_Rate(m/s)', 'Yaw_Rate(m/s)', 'Rud_angle_demand(deg)', 'Ster_angle_demand(deg)', 'RPM', 'Actu_Rud_ang(deg)', 'Act_Ster_ang(deg)', 'Act_RPM']
@@ -80,6 +81,5 @@ def main():
     plt.show()
     plt.close()
 
-    
     sys.exit(1)
 main()
