@@ -59,7 +59,6 @@ def leg(depth,yaw,legTime):
 def main():
     time_profile = pd.read_csv('Last_Profile.csv')
     for i in range(len(time_profile)):
-        print(time_profile.iloc[i,8], simData.shape, simTime.shape)
         leg(time_profile.iloc[i,0],time_profile.iloc[i,1],time_profile.iloc[i,8])
         
     final_data = np.hstack((simTime,simData))
