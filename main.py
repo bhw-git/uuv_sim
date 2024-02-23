@@ -41,9 +41,6 @@ vehicle = remus100('depthHeadingAutopilot',time_profile.iloc[0,0],time_profile.i
 printVehicleinfo(vehicle, sampleTime, N) 
 [simTime, simData] = simulate(N, sampleTime, vehicle)
 
-# with open("C:\\Users\\bhuva\\Documents\\controlsys\\Launchtrax_sim\\uw_sim\\SimData_leg.csv",'w',newline='') as file:
-#     pass
-
 def leg(depth,yaw,legTime):
     N_samples = legTime / sampleTime
     N_samples = round(N_samples)
@@ -62,13 +59,12 @@ def leg(depth,yaw,legTime):
 def main():
     time_profile = pd.read_csv('Last_Profile.csv')
     for i in range(len(time_profile)):
-        print(time_profile.iloc[i,8], simData.shape, simTime.shape)
         leg(time_profile.iloc[i,0],time_profile.iloc[i,1],time_profile.iloc[i,8])
         
-    # final_data = np.hstack((simTime,simData))
-    # df = pd.DataFrame(final_data)
-    # df.columns = ['Time(sec)', 'Position(x(m))', 'Position(y(m))', 'Position(z(m))', 'Roll(deg)', 'Pitch(deg)', 'Yaw(deg)', 'Surge_Velocity(m/s)', 'Sway_Velocity(m/s)', 'Heave_Velocity(m/s)', 'Roll_Rate(m/s)', 'Pitch_Rate(m/s)', 'Yaw_Rate(m/s)', 'Rud_angle_demand(deg)', 'Ster_angle_demand(deg)', 'RPM', 'Actu_Rud_ang(deg)', 'Act_Ster_ang(deg)', 'Act_RPM']
-    # df.to_csv("C:\\Users\\bhuva\\Documents\\controlsys\\Launchtrax_sim\\uw_sim\\SimData_leg.csv",index=False)
+    final_data = np.hstack((simTime,simData))
+    df = pd.DataFrame(final_data)
+    df.columns = ['Time(sec)', 'Position(x(m))', 'Position(y(m))', 'Position(z(m))', 'Roll(deg)', 'Pitch(deg)', 'Yaw(deg)', 'Surge_Velocity(m/s)', 'Sway_Velocity(m/s)', 'Heave_Velocity(m/s)', 'Roll_Rate(m/s)', 'Pitch_Rate(m/s)', 'Yaw_Rate(m/s)', 'Rud_angle_demand(deg)', 'Ster_angle_demand(deg)', 'RPM', 'Actu_Rud_ang(deg)', 'Act_Ster_ang(deg)', 'Act_RPM']
+    df.to_csv("C:\\Users\\bhuva\\Documents\\controlsys\\Launchtrax_sim\\uw_sim\\SimData_leg.csv",index=False)
 
     plotVehicleStates(simTime, simData, 1)
     plotControls(simTime, simData, vehicle, 2)
