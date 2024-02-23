@@ -69,10 +69,6 @@ class remus100:
         V_c:    current speed (m/s)
         beta_c: current direction (deg)
     """
-    #reset the output.csv file
-    with open("C:\\Users\\bhuva\\Documents\\controlsys\\output.csv","w") as file:
-        pass
-
     def __init__(
         self,
         controlSystem="stepInput",
@@ -494,16 +490,6 @@ class remus100:
         self.e_psi_int += sampleTime * ssa( psi - self.psi_d );
 
         u_control = np.array([ delta_r, delta_s, n], float)
-
-        # Append data to the output.csv file
-        # try block is used to check the output data is writable to the Output file
-        # if not available then it will raise an exception
-        try:
-            with open("C:\\Users\\bhuva\\Documents\\controlsys\\output.csv","a",newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow(u_control)
-        except IOError:
-            print ("Cannot write the data into the file'output.csv'")
         return u_control
 
     
