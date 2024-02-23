@@ -136,7 +136,7 @@ class remus100:
         if r_rpm < 0.0 or r_rpm > self.nMax:
             sys.exit("The RPM value should be in the interval 0-%s", (self.nMax))
         
-        if r_z > 100.0 or r_z < 0.0:
+        if r_z > 1000.0 or r_z < 0.0:
             sys.exit('desired depth must be between 0-100 m')    
         
         # Hydrodynamics (Fossen 2021, Section 8.4.2)    
