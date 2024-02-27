@@ -53,7 +53,10 @@ def leg(depth,yaw,legTime,calc_rpm):
     # speed_in_m_per_s = speed_in_knots * 0.51444  
     global simData,simTime
     vehicle.ref_z = depth
-    vehicle.ref_psi = yaw
+    if(abs(vehicle.ref_psi - yaw) > 180):
+        vehicle.ref_psi = yaw + 360
+    else:
+        vehicle.ref_psi = yaw
     vehicle.ref_n = calc_rpm
     initial_state =np.array([simData[-1,0],simData[-1,1],simData[-1,2],simData[-1,3],simData[-1,4],simData[-1,5]])
     vehicle.nu = np.array([simData[-1,6],simData[-1,7],simData[-1,8],simData[-1,9],simData[-1,10],simData[-1,11]])
@@ -70,15 +73,14 @@ def main():
         print(time_profile.iloc[i,8])
         calc_rpm = (42.95 * time_profile.iloc[i,7]) / 0.1397
         calc_rpm = round(calc_rpm)
-        print(calc_rpm)
         leg(time_profile.iloc[i,0],time_profile.iloc[i,1],time_profile.iloc[i,8],calc_rpm)
 
-    final_data = np.hstack((simTime,simData))
-    df = pd.DataFrame(final_data)
-    downsampled_df = df.iloc[::5]
-    df.columns = ['Time(sec)', 'Position(x(m))', 'Position(y(m))', 'Position(z(m))', 'Roll(deg)', 'Pitch(deg)', 'Yaw(deg)', 'Surge_Velocity(m/s)', 'Sway_Velocity(m/s)', 'Heave_Velocity(m/s)', 'Roll_Rate(m/s)', 'Pitch_Rate(m/s)', 'Yaw_Rate(m/s)', 'Rud_angle_demand(deg)', 'Ster_angle_demand(deg)', 'RPM', 'Actu_Rud_ang(deg)', 'Act_Ster_ang(deg)', 'Act_RPM']
+    # final_data = np.hstack((simTime,simData))
+    # df = pd.DataFrame(final_data)
+    # downsampled_df = df.iloc[::5]
+    # df.columns = ['Time(sec)', 'Position(x(m))', 'Position(y(m))', 'Position(z(m))', 'Roll(deg)', 'Pitch(deg)', 'Yaw(deg)', 'Surge_Velocity(m/s)', 'Sway_Velocity(m/s)', 'Heave_Velocity(m/s)', 'Roll_Rate(m/s)', 'Pitch_Rate(m/s)', 'Yaw_Rate(m/s)', 'Rud_angle_demand(deg)', 'Ster_angle_demand(deg)', 'RPM', 'Actu_Rud_ang(deg)', 'Act_Ster_ang(deg)', 'Act_RPM']
     # df.to_csv("SimData_leg.csv",index=False)
-    downsampled_df.to_csv("DownSampled_LegData.csv",index=False)
+    # downsampled_df.to_csv("DownSampled_LegData.csv",index=False)
 
     plotVehicleStates(simTime, simData, 1)
     plotControls(simTime, simData, vehicle, 2)
