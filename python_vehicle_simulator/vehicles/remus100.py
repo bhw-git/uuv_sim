@@ -219,8 +219,6 @@ class remus100:
         
         self.e_psi_int = 0     # yaw angle error integral state
         
-        
-        
         # Depth autopilot
         self.wn_d_z = 1/20     # desired natural frequency, reference model
         self.Kp_z = 0.1        # heave proportional gain, outer loop
