@@ -52,6 +52,7 @@ import math
 import sys
 from python_vehicle_simulator.lib.control import PIDpolePlacement
 from python_vehicle_simulator.lib.gnc import crossFlowDrag,forceLiftDrag,Hmtrx,m2c,gvect,ssa
+import pandas
 
 # Class Vehicle
 class remus100:
@@ -84,10 +85,10 @@ class remus100:
         self.rho = 1026                 # density of water (kg/m^3)
         g = 9.81                        # acceleration of gravity (m/s^2)
         
-        if controlSystem == "depthHeadingAutopilot":
+        if controlSystem == "depthHeadingAutopilot": 
             self.controlDescription = (
                 "Depth and heading autopilots, z_d = "
-                + str(r_z) 
+                + str(r_z)  
                 + ", psi_d = " 
                 + str(r_psi) 
                 + " deg"
@@ -98,12 +99,12 @@ class remus100:
                 "Step inputs for stern planes, rudder and propeller")
             controlSystem = "stepInput"
             
-        self.ref_z = r_z
-        self.ref_psi = r_psi
-        self.ref_n = r_rpm
-        self.V_c = V_current
-        self.beta_c = beta_current * self.D2R
-        self.controlMode = controlSystem
+        self.ref_z = r_z                         # reference depth [m]
+        self.ref_psi = r_psi                     # reference heading [deg]
+        self.ref_n = r_rpm                       # reference propeller RPM [rpm]
+        self.V_c = V_current                     # current speed [m/s]
+        self.beta_c = beta_current * self.D2R    # current direction [rad]
+        self.controlMode = controlSystem         # Control system type ("stepInput" or "depthHeadingAutopilot")
         
         # Initialize the AUV model 
         self.name = (
@@ -123,7 +124,7 @@ class remus100:
         
 
         # Actuator dynamics
-        self.deltaMax_r = 30 * self.D2R # max rudder angle (rad)
+        self.deltaMax_r = 30 * self.D2R # max rudder angle (rad)  #0.523598775
         self.deltaMax_s = 30 * self.D2R # max stern plane angle (rad)
         self.nMax = 1525                # max propeller revolution (rpm)    
         self.T_delta = 1.0              # rudder/stern plane time constant (s)
@@ -133,7 +134,7 @@ class remus100:
             sys.exit("The RPM value should be in the interval 0-%s", (self.nMax))
         
         if r_z > 1000.0 or r_z < 0.0:
-            sys.exit('desired depth must be between 0-100 m')    
+            sys.exit('desired depth must be between 0-1000 m')    
         
         # Hydrodynamics (Fossen 2021, Section 8.4.2)    
         self.S = 0.7 * self.L * self.diam    # S = 70% of rectangle L * diam
@@ -218,8 +219,6 @@ class remus100:
         
         self.e_psi_int = 0     # yaw angle error integral state
         
-        
-        
         # Depth autopilot
         self.wn_d_z = 1/20     # desired natural frequency, reference model
         self.Kp_z = 0.1        # heave proportional gain, outer loop
@@ -246,9 +245,9 @@ class remus100:
         nu_c = np.array([u_c, v_c, 0, 0, 0, 0], float) # current velocity 
         Dnu_c = np.array([nu[5]*v_c, -nu[5]*u_c, 0, 0, 0, 0],float) # derivative
         nu_r = nu - nu_c                               # relative velocity        
-        alpha = math.atan2( nu_r[2], nu_r[0] )         # angle of attack 
-        U = math.sqrt(nu[0]**2 + nu[1]**2 + nu[2]**2)  # vehicle speed
-        U_r = math.sqrt(nu_r[0]**2 + nu_r[1]**2 + nu_r[2]**2)  # relative speed
+        alpha = math.atan2( nu_r[2], nu_r[0] )         # angle of attack  # Heave velocity is nu_r[2] , nu_r[0] is computed surge_Velocity 
+        U = math.sqrt(nu[0]**2 + nu[1]**2 + nu[2]**2)  # vehicle speed 
+        U_r = math.sqrt(nu_r[0]**2 + nu_r[1]**2 + nu_r[2]**2)  # relative speed 
 
         # Commands and actual control signals
         delta_r_c = u_control[0]    # commanded tail rudder (rad)
@@ -276,12 +275,14 @@ class remus100:
         n_rps = n / 60  # propeller revolution (rps) 
         Va = 0.944 * U  # advance speed (m/s)
 
+        
         # Ja_max = 0.944 * 2.5 / (0.14 * 1525/60) = 0.6632
         Ja_max = 0.6632
         
         # Single-screw propeller with 3 blades and blade-area ratio = 0.718.
         # Coffes. are computed using the Matlab MSS toolbox:     
-        # >> [KT_0, KQ_0] = wageningen(0,1,0.718,3)
+        # >> [KT_0, KQ_0] = wageningen(0,1,0.718,3) 
+            # (KT)Thrust Co-efficient and (KQ)Torque Co-efficient
         KT_0 = 0.4566
         KQ_0 = 0.0700
         # >> [KT_max, KQ_max] = wageningen(0.6632,1,0.718,3) 
@@ -293,8 +294,10 @@ class remus100:
         # KT ~= KT_0 + (KT_max-KT_0)/Ja_max * Ja   
         # KQ ~= KQ_0 + (KQ_max-KQ_0)/Ja_max * Ja  
       
+        
         if n_rps > 0:   # forward thrust
-
+            # (self.rho) density of water (kg/m^3)
+            # X_prop = thrust and K_prop = torque
             X_prop = self.rho * pow(D_prop,4) * ( 
                 KT_0 * abs(n_rps) * n_rps + (KT_max-KT_0)/Ja_max * 
                 (Va/D_prop) * abs(n_rps) )        
@@ -305,11 +308,11 @@ class remus100:
         else:    # reverse thrust (braking)
         
             X_prop = self.rho * pow(D_prop,4) * KT_0 * abs(n_rps) * n_rps 
-            K_prop = self.rho * pow(D_prop,5) * KQ_0 * abs(n_rps) * n_rps 
+            K_prop = self.rho * pow(D_prop,5) * KQ_0 * abs(n_rps) * n_rps   
         
         # Rigi-body/added mass Coriolis/centripetal matrices expressed in the CO
-        CRB = m2c(self.MRB, nu_r)
-        CA  = m2c(self.MA, nu_r)
+        CRB = m2c(self.MRB, nu_r)   # (CRB) Coriolis Rigid Body Matrix  # (MRB) Rigid Body Inertia Matrix
+        CA  = m2c(self.MA, nu_r)    # (CA) Coriolis Acceleration Matrix  # (MA) Added System Mass Matrix
                
         # Nonlinear quadratic velocity terms in pitch and yaw (Munk moments) 
         # are set to zero since only linear damping is used
@@ -322,7 +325,7 @@ class remus100:
 
         # Dissipative forces and moments
         D = np.diag([
-            self.M[0][0] / self.T_surge,
+            self.M[0][0] / self.T_surge,       # (M[]) Added Mass Matrix of MRB + MA
             self.M[1][1] / self.T_sway,
             self.M[2][2] / self.T_heave,
             self.M[3][3] * 2 * self.zeta_roll  * self.w_roll,
@@ -334,18 +337,18 @@ class remus100:
         D[1][1] = D[1][1] * math.exp(-3*U_r) # go to zero at higher speeds, i.e.
         D[5][5] = D[5][5] * math.exp(-3*U_r) # drag and lift/drag dominate
 
-        tau_liftdrag = forceLiftDrag(self.diam,self.S,self.CD_0,alpha,U_r)
-        tau_crossflow = crossFlowDrag(self.L,self.diam,self.diam,nu_r)
+        tau_liftdrag = forceLiftDrag(self.diam,self.S,self.CD_0,alpha,U_r) #alpha (angle of attack) U_r(relative speed)
+        tau_crossflow = crossFlowDrag(self.L,self.diam,self.diam,nu_r)     #nu_r(relative velocity)
 
         # Restoring forces and moments
         g = gvect(self.W,self.B,eta[4],eta[3],self.r_bg,self.r_bb)
         
         # Horizontal- and vertical-plane relative speed
-        U_rh = math.sqrt( nu_r[0]**2 + nu_r[1]**2 )
+        U_rh = math.sqrt( nu_r[0]**2 + nu_r[1]**2 ) # nu_r(relative velocity)
         U_rv = math.sqrt( nu_r[0]**2 + nu_r[2]**2 ) 
 
         # Rudder and stern-plane drag
-        X_r = -0.5 * self.rho * U_rh**2 * self.A_r * self.CL_delta_r * delta_r**2
+        X_r = -0.5 * self.rho * U_rh**2 * self.A_r * self.CL_delta_r * delta_r**2  #self.rho(density of water) U_rh(Relative speed on horizontal plane) A_r(rudder area) CL_delta_r(rudder lift co-efficient) delta_r(Rudder angle actual)
         X_s = -0.5 * self.rho * U_rv**2 * self.A_s * self.CL_delta_s * delta_s**2
 
         # Rudder sway force 
@@ -356,27 +359,27 @@ class remus100:
 
         # Generalized force vector
         tau = np.array([
-            (1-t_prop) * X_prop + X_r + X_s, 
-            Y_r, 
-            Z_s,
+            (1-t_prop) * X_prop + X_r + X_s,   #t_prop (thrust detection number) X_r(rudder drag) X_s(stern drag)
+            Y_r,                               # Y_r(Rudder Sway Force)
+            Z_s,                               # Z_s(Stern heave Force)
             K_prop / 10,   # scaled down by a factor of 10 to match exp. results
             self.x_s * Z_s,
             self.x_r * Y_r
             ], float)
     
         # AUV dynamics
-        tau_sum = tau + tau_liftdrag + tau_crossflow - np.matmul(C+D,nu_r)  - g
-        nu_dot = Dnu_c + np.matmul(self.Minv, tau_sum)
+        tau_sum = tau + tau_liftdrag + tau_crossflow - np.matmul(C+D,nu_r)  - g #C(Coriolis rigid body matrix + Coriolis Acceleration matrix) D(dissipative forces)
+        nu_dot = Dnu_c + np.matmul(self.Minv, tau_sum) # Minv(inverted linear algebra of mass matrix)
             
         # Actuator dynamics
-        delta_r_dot = (delta_r_c - delta_r) / self.T_delta
+        delta_r_dot = (delta_r_c - delta_r) / self.T_delta 
         delta_s_dot = (delta_s_c - delta_s) / self.T_delta
-        n_dot = (n_c - n) / self.T_n
+        n_dot = (n_c - n) / self.T_n  #n_c(commanded propeller revolution) n(actual propeller revolution) T_n(propeller time constant)
 
         # Forward Euler integration [k+1]
-        nu += sampleTime * nu_dot
-        delta_r += sampleTime * delta_r_dot
-        delta_s += sampleTime * delta_s_dot
+        nu += sampleTime * nu_dot                  #nu(vehicle Velocity)
+        delta_r += sampleTime * delta_r_dot        #delta_r(actual rudder angle)(rad)
+        delta_s += sampleTime * delta_s_dot        #delta_s(actual stern angle)(rad)
         n += sampleTime * n_dot
         
         u_actual = np.array([ delta_r, delta_s, n ], float)
@@ -430,6 +433,7 @@ class remus100:
         e_psi = psi - self.psi_d    # yaw angle tracking error
         e_r   = r - self.r_d        # yaw rate tracking error
         z_ref = self.ref_z          # heave position (depth) setpoint
+        psi_ref = self.ref_psi
         psi_ref = self.ref_psi * self.D2R   # yaw angle setpoint
         
         #######################################################################
@@ -442,7 +446,7 @@ class remus100:
         #######################################################################
         # LP filtered desired depth command
         self.z_d  = math.exp( -sampleTime * self.wn_d_z ) * self.z_d \
-            + ( 1 - math.exp( -sampleTime * self.wn_d_z) ) * z_ref  
+            + ( 1 - math.exp( -sampleTime * self.wn_d_z) ) * z_ref         #self.wn_d_z( desired natural frequency, reference model)
             
         # PI controller    
         theta_d = self.Kp_z * ( (z - self.z_d) + (1/self.T_z) * self.z_int )
@@ -491,5 +495,3 @@ class remus100:
 
         u_control = np.array([ delta_r, delta_s, n], float)
         return u_control
-
-    
