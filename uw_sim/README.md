@@ -66,9 +66,10 @@ Graphs of **rudder angle**, **stern plane angle**, and **propeller speed**, refl
 ### 3. 3D Trajectory
 A 3D visualization of the UUV’s path through water while tracking waypoints under current disturbances.
 
-![UUV Simulation Trajectory](results/uuv_simulation_pic1.jpg)
-![Control Response](results/uuv_simulation_pic2.jpg)
-![State Evolution](results/uuv_simulation_pic3.jpg)
+![uuv_simlution_pic1](https://github.com/user-attachments/assets/e2a98546-4db9-4016-8782-eeb2edbc8774)
+![uuv_simulation_pic2](https://github.com/user-attachments/assets/93d759d7-452d-475b-8438-9d7138e71063)
+![uuv_simulation_pic3](https://github.com/user-attachments/assets/918f5aac-0850-417a-9b4c-3048090de2e7)
+
 
 ## 📜 License
 This project is licensed under the **MIT License**.
