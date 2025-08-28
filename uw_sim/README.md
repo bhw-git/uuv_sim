@@ -22,12 +22,12 @@ This project implements the **6-DOF (Degrees of Freedom) equations of motion** f
 ## 📂 Project Structure
 
 ```
-UUV-Simulation/
-│── uuv_simulation.py      # Core simulation script
-│── utils/                 # Helper functions (math models, equations)
-│── results/               # Simulation outputs & plots
-│── requirements.txt       # Dependencies
-│── README.md              # Documentation
+Uw-Sim/
+│── python_vehicle_simulator     # Core simulation script
+│── Last_Profile.csv             # Input parameters file for core simulation
+│── main.py                      # main file which runs the script with input parameters
+│── outupt.csv                   # Final output value in .csv file format
+│── README.md                    # Documentation
 ```
 
 ## 🛠️ Requirements
